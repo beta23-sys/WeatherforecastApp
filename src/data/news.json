@@ -1,0 +1,122 @@
+[
+  {
+    "date": "2025-05-06",
+    "title": "Heavy rainfall floods Mumbai streets",
+    "content": "Monsoon arrives early, causing traffic chaos and power outages.",
+    "category": "Asia"
+  },
+  {
+    "date": "2025-05-06",
+    "title": "Wildfires spread in California",
+    "content": "Dry conditions and strong winds fuel multiple blazes across the state.",
+    "category": "North America"
+  },
+  {
+    "date": "2025-05-05",
+    "title": "Snowstorm hits New Zealand's South Island",
+    "content": "Alpine regions see up to 50 cm of snow, disrupting travel.",
+    "category": "Oceania"
+  },
+  {
+    "date": "2025-05-05",
+    "title": "Tornado warning issued in Texas",
+    "content": "Severe thunderstorms bring risk of damaging winds and hail.",
+    "category": "North America"
+  },
+  {
+    "date": "2025-05-04",
+    "title": "Drought worsens in Ethiopia",
+    "content": "Millions face food shortages as crops fail for third straight year.",
+    "category": "Africa"
+  },
+  {
+    "date": "2025-05-04",
+    "title": "Aurora borealis visible across Scotland",
+    "content": "Strong solar storm creates dazzling northern lights display.",
+    "category": "Europe"
+  },
+  {
+    "date": "2025-05-03",
+    "title": "Typhoon approaches Philippines",
+    "content": "Residents evacuate as storm intensifies over Pacific waters.",
+    "category": "Asia"
+  },
+  {
+    "date": "2025-05-03",
+    "title": "Record heat in the Amazon rainforest",
+    "content": "Temperatures reach 38 °C, raising deforestation concerns.",
+    "category": "South America"
+  },
+  {
+    "date": "2025-05-02",
+    "title": "Blizzard paralyzes Moscow",
+    "content": "Heavy snow and ice cause flight cancellations and delays.",
+    "category": "Europe"
+  },
+  {
+    "date": "2025-05-02",
+    "title": "Cyclone forms off Madagascar coast",
+    "content": "Authorities warn of potential flooding and landslides.",
+    "category": "Africa"
+  },
+  {
+    "date": "2025-05-01",
+    "title": "Unseasonal frost damages Canadian crops",
+    "content": "Farmers report losses as temperatures plunge overnight.",
+    "category": "North America"
+  },
+  {
+    "date": "2025-05-01",
+    "title": "Dust storm engulfs Dubai",
+    "content": "Visibility drops to near zero, halting air traffic.",
+    "category": "Middle East"
+  },
+  {
+    "date": "2025-04-30",
+    "title": "Floods devastate Bangladesh",
+    "content": "Rivers overflow after days of torrential rain, displacing thousands.",
+    "category": "Asia"
+  },
+  {
+    "date": "2025-04-30",
+    "title": "Hailstorm damages vineyards in France",
+    "content": "Wine producers fear significant losses after severe weather.",
+    "category": "Europe"
+  },
+  {
+    "date": "2025-04-29",
+    "title": "Heat alert in Japan as temperatures soar",
+    "content": "Tokyo records 35 °C, highest April temperature in decades.",
+    "category": "Asia"
+  },
+  {
+    "date": "2025-04-29",
+    "title": "Polar vortex brings freezing temps to Scandinavia",
+    "content": "Nordic countries experience coldest April in 30 years.",
+    "category": "Europe"
+  },
+  {
+    "date": "2025-04-28",
+    "title": "Hurricane forms in the Caribbean",
+    "content": "Early-season storm prompts emergency preparations.",
+    "category": "North America"
+  },
+  {
+    "date": "2025-04-28",
+    "title": "Heavy fog disrupts London airports",
+    "content": "Hundreds of flights delayed due to poor visibility.",
+    "category": "Europe"
+  },
+  {
+    "date": "2025-04-27",
+    "title": "Landslide kills dozens in Colombia",
+    "content": "Days of heavy rain trigger deadly mudslide in Andes region.",
+    "category": "South America"
+  },
+  {
+    "date": "2025-04-27",
+    "title": "Saharan dust turns skies orange in Greece",
+    "content": "Unusual weather phenomenon sparks health warnings.",
+    "category": "Europe"
+  }
+]
