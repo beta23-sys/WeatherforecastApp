@@ -4,7 +4,7 @@ import vue                   from '@vitejs/plugin-vue'
 import vueDevTools           from 'vite-plugin-vue-devtools'
 
 export default defineConfig({
-  base: '/cos30043/s104821881/WeatherforecastApp/',  
+  base: '/',  
   plugins: [
     vue(),
     vueDevTools(),

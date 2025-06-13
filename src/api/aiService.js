@@ -21,7 +21,7 @@ const initGeminiAI = (apiKey) => {
  * @param {string} model - Model to use (default: "gemini-2.0-flash")
  * @returns {Promise<string>} - AI response
  */
-export const askAI = async (question, context = null, model = "gemini-2.0-flash") => {
+export const askWeatherAI = async (question, context = null, model = "gemini-2.0-flash") => {
   try {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     
@@ -76,7 +76,7 @@ export const getWeatherSummary = async (weatherData) => {
     Make it friendly and informative for someone planning their day.
   `;
 
-  return askAI(prompt, null, "gemini-2.0-flash");
+  return askWeatherAI(prompt, null, "gemini-2.0-flash");
 };
 
 /**
@@ -96,5 +96,5 @@ export const getClothingRecommendations = async (weatherData) => {
     Provide 3-4 specific clothing recommendations.
   `;
 
-  return askAI(prompt, null, "gemini-2.0-flash");
+  return askWeatherAI(prompt, null, "gemini-2.0-flash");
 };
