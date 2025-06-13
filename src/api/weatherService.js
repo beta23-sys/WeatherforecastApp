@@ -9,7 +9,6 @@ if (!API_KEY) throw new Error('Missing Tomorrow.io API key');
  */
 export async function fetchDailyForecast(location) {
   // Build query-string exactly as the docs show
-  console.log('🔑 API key is', API_KEY);
   const params = new URLSearchParams({
     location,           // city name, zip, or "lat,lon"
     timesteps: '1d',    // daily blocks

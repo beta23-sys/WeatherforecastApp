@@ -1,19 +1,32 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 
-import Home   from '@/views/Home.vue';
-import News   from '@/views/News.vue';
-import About  from '@/views/About.vue';
-
+import Home     from '@/views/Home.vue';
+import News     from '@/views/News.vue';
+import About    from '@/views/About.vue';
+import Login    from '@/views/Login.vue';
+import Register from '@/views/Register.vue';
 
 const routes = [
-  { path: '/',        component: Home },
-  { path: '/news',    component: News },
-  { path: '/about',   component: About },
-
+  { path: '/',        name: 'Home',     component: Home },
+  { path: '/news',    name: 'News',     component: News,     meta: { requiresAuth: true } },
+  { path: '/about',   name: 'About',    component: About },
+  { path: '/login',   name: 'Login',    component: Login },
+  { path: '/register',name: 'Register', component: Register }
 ];
 
-export default createRouter({
-  history: createWebHashHistory(),   // hash mode = no server config needed
+const router = createRouter({
+  history: createWebHistory('/cos30043/s104821881/WeatherforecastApp/'),
   routes,
   scrollBehavior: () => ({ top: 0 })
 });
+
+// Global guard: redirect to /login if trying to access a protected route
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth) {
+    if (!localStorage.getItem('userEmail')) {
+      return { name: 'Login', query: { redirect: to.fullPath } };
+    }
+  }
+});
+
+export default router;

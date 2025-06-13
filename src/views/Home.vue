@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { fetchDailyForecast } from '@/api/weatherService.js';
+import { askWeatherAI } from '@/api/aiService';
+import { computed } from 'vue';
+import '@/styles/home.css';
+
+const isLoggedIn = computed(() => !!localStorage.getItem('userEmail')); // Check if user is logged in by checking localStorage
 
 //
 // --- Reactive state ---
@@ -9,6 +14,11 @@ const searchQuery     = ref('');
 const location        = ref('Melbourne');
 const isLoading       = ref(false);
 const error           = ref(null);
+
+const aiQuery = ref('');
+const isAskingAI = ref(false);
+const aiError = ref(null);
+const aiResponse = ref(null);
 
 const currentWeather  = ref({
   temp:        0,
@@ -39,48 +49,17 @@ const weatherDetails  = ref({
 const hourlyForecast  = ref([]);
 const dailyForecast   = ref([]);
 
-//
-// --- Weather condition mapping ---
-//
-const getWeatherCondition = (weatherCode) => {
-  const weatherCodes = {
-    1000: 'Clear',
-    1001: 'Cloudy',
-    1100: 'Mostly Clear',
-    1101: 'Partly Cloudy',
-    1102: 'Mostly Cloudy',
-    2000: 'Fog',
-    2100: 'Light Fog',
-    4000: 'Drizzle',
-    4001: 'Rain',
-    4200: 'Light Rain',
-    4201: 'Heavy Rain',
-    5000: 'Snow',
-    5001: 'Flurries',
-    5100: 'Light Snow',
-    5101: 'Heavy Snow',
-    6000: 'Freezing Drizzle',
-    6001: 'Freezing Rain',
-    6200: 'Light Freezing Rain',
-    6201: 'Heavy Freezing Rain',
-    7000: 'Ice Pellets',
-    7101: 'Heavy Ice Pellets',
-    7102: 'Light Ice Pellets',
-    8000: 'Thunderstorm'
-  };
-  return weatherCodes[weatherCode] || 'Unknown';
-};
 
-const getWeatherIcon = (weatherCode) => {
-  if (weatherCode === 1000 || weatherCode === 1100) return 'sun';
-  if (weatherCode >= 1001 && weatherCode <= 1102) return 'cloud-sun';
-  if (weatherCode >= 2000 && weatherCode <= 2100) return 'smog';
-  if (weatherCode >= 4000 && weatherCode <= 4201) return 'cloud-rain';
-  if (weatherCode >= 5000 && weatherCode <= 5101) return 'snowflake';
-  if (weatherCode >= 6000 && weatherCode <= 6201) return 'icicles';
-  if (weatherCode >= 7000 && weatherCode <= 7102) return 'cloud-hail';
-  if (weatherCode === 8000) return 'bolt';
-  return 'cloud';
+const getWeatherIcon = (condition) => {
+  const c = condition.toLowerCase();
+  if (c.includes('rain'))        return 'cloud-rain';
+  if (c.includes('drizzle'))     return 'cloud-drizzle';
+  if (c.includes('snow'))        return 'snowflake';
+  if (c.includes('thunder'))     return 'bolt';
+  if (c.includes('fog')||c.includes('smog')) return 'smog';
+  if (c.includes('cloud'))       return 'cloud';
+  if (c.includes('sunny')||c.includes('clear')) return 'sun';
+  return 'cloud'; // fallback
 };
 
 const getSummarizedCondition = (weatherData) => {
@@ -90,7 +69,7 @@ const getSummarizedCondition = (weatherData) => {
   if (values.rainIntensityMax > 10) return 'Heavy Rain';
   if (values.rainIntensityMax > 3) return 'Rain';
   if (values.rainIntensityMax > 0) return 'Light Rain';
-  
+
   if (values.snowIntensityMax > 0) return 'Snow';
   if (values.freezingRainIntensityMax > 0) return 'Freezing Rain';
   
@@ -152,7 +131,7 @@ const parseWeatherData = (data) => {
       low: Math.round(values.temperatureMin || 0),
       weatherCode: values.weatherCode || 0,
       condition: getSummarizedCondition(item),
-      icon: getWeatherIcon(values.weatherCode || 0),
+      icon: getWeatherIcon(getSummarizedCondition(item)),
       humidity: values.humidityAvg ? `${Math.round(values.humidityAvg)}%` : 'N/A',
       windSpeed: values.windSpeedAvg ? `${Math.round(values.windSpeedAvg)} km/h` : 'N/A',
       pressure: values.pressureSurfaceLevelAvg ? `${Math.round(values.pressureSurfaceLevelAvg)} hPa` : 'N/A',
@@ -272,6 +251,42 @@ const getBackgroundClass = () => {
 onMounted(() => {
   fetchWeatherData(location.value);
 });
+
+// Add this new method for AI questions
+const askAI = async () => {
+  if (!aiQuery.value.trim()) return;
+  
+  isAskingAI.value = true;
+  aiError.value = null;
+  aiResponse.value = null;
+  
+  try {
+    // Prepare weather context from current data
+    const weatherContext = {
+      location: location.value,
+      temp: currentWeather.value.temp,
+      condition: currentWeather.value.condition,
+      high: currentWeather.value.high,
+      low: currentWeather.value.low,
+      humidity: currentWeather.value.humidity,
+      windSpeed: currentWeather.value.windSpeed,
+      uvIndex: currentWeather.value.uvIndex,
+      precipitation: currentWeather.value.precipitation
+    };
+    
+    // Call the AI service with user question and weather context
+    const response = await askWeatherAI(aiQuery.value, weatherContext);
+    aiResponse.value = response;
+    
+    // Clear the input
+    aiQuery.value = '';
+  } catch (err) {
+    aiError.value = `Error asking AI: ${err.message}`;
+    console.error('AI Error:', err);
+  } finally {
+    isAskingAI.value = false;
+  }
+};
 </script>
 
 <template>
@@ -380,7 +395,7 @@ onMounted(() => {
     </div>
 
     <!-- Additional Weather Details -->
-    <div class="weather-card p-3">
+    <div class="weather-card p-3 mb-4">
       <h5 class="mb-3">Weather Details</h5>
       <div class="row">
         <div class="col-6 col-md-3 mb-3">
@@ -413,195 +428,44 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+     <!-- Add this new section for the AI feature -->
+    <div v-if="isLoggedIn" class="weather-card p-3 mb-4">
+      <h5 class="mb-3">Ask AI About the Weather</h5>
+      
+      <!-- Error Message -->
+      <div v-if="aiError" class="alert alert-danger mb-3" role="alert">
+        {{ aiError }}
+      </div>
+      
+      <!-- AI Response -->
+      <div v-if="aiResponse" class="ai-response mb-3 p-3 bg-light rounded">
+        <p class="mb-0">{{ aiResponse }}</p>
+      </div>
+      
+      <!-- Input Form -->
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control ai-input"
+          placeholder="Ask anything about the weather..."
+          v-model="aiQuery"
+          @keyup.enter="askAI"
+          :disabled="isAskingAI"
+        />
+        <button
+          class="btn btn-primary ai-btn"
+          type="button"
+          @click="askAI"
+          :disabled="isAskingAI || !aiQuery.trim()"
+        >
+          <i class="fas" :class="isAskingAI ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+        </button>
+      </div>
+      
+      <p class="small text-muted mt-2 mb-0">
+        Example: "Will I need an umbrella today?" or "What's the UV index this weekend?"
+      </p>
+    </div>
   </section>
-
-  
 </template>
-
-<style scoped>
-.search-bar {
-  border-radius: 25px 0 0 25px;
-  padding: 10px 15px;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.search-btn {
-  border-radius: 0 25px 25px 0;
-  padding: 10px 20px;
-}
-
-.current-weather {
-  border-radius: 15px;
-  padding: 20px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.weather-card {
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-  background: white;
-}
-
-.weather-card:hover {
-  transform: translateY(-5px);
-}
-
-.bg-sunny {
-  background: linear-gradient(135deg, #f6d365, #fda085);
-}
-
-.bg-cloudy {
-  background: linear-gradient(135deg, #5b86e5, #36d1dc);
-}
-
-.bg-rainy {
-  background: linear-gradient(135deg, #3a7bd5, #1a2980);
-}
-
-.bg-snowy {
-  background: linear-gradient(135deg, #e6f3ff, #b3d9ff);
-  color: #333 !important;
-}
-
-.bg-stormy {
-  background: linear-gradient(135deg, #2c3e50, #34495e);
-}
-
-.temp-high {
-  color: #ff6b6b;
-  font-weight: bold;
-}
-
-.temp-low {
-  color: #4d96ff;
-  font-weight: bold;
-}
-
-.hourly-title {
-  color: white;
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-.hourly-forecast-inline {
-  display: flex;
-  overflow-x: auto;
-  gap: 15px;
-  padding: 10px 0;
-}
-
-.hourly-item-inline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 60px;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
-}
-
-.hourly-time {
-  font-size: 0.8rem;
-  margin-bottom: 5px;
-  opacity: 0.8;
-}
-
-.hourly-icon {
-  font-size: 1.2rem;
-  margin: 5px 0;
-  opacity: 0.9;
-}
-
-.hourly-temp {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0;
-}
-
-/* After: */
-.hourly-forecast {
-  display: flex;
-  justify-content: space-between;  /* evenly distribute items */
-  padding: 15px 0;
-  /* remove overflow-x if you no longer want horizontal scrolling */
-}
-
-.hourly-item {
-  flex: 1;            /* each item grows equally */
-  min-width: 0;       /* allow items to shrink below their content size */
-  margin: 0 5px;      /* small gap between cards */
-  text-align: center;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-.forecast-icon {
-  font-size: 2rem;
-  color: #1a73e8;
-}
-
-.detail-item {
-  text-align: center;
-  padding: 10px;
-  min-width: 80px;
-}
-
-.detail-icon {
-  font-size: 1.5rem;
-  margin-bottom: 5px;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.weather-card .detail-icon {
-  color: #1a73e8;
-}
-
-.location-title {
-  font-size: 1.8rem;
-  font-weight: 600;
-}
-
-.last-updated {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.alert {
-  border-radius: 10px;
-}
-
-
-/* Make scrollbar for hourly forecast less visible */
-.hourly-forecast-inline::-webkit-scrollbar {
-  height: 4px;
-}
-
-.hourly-forecast-inline::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.hourly-forecast-inline::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-}
-
-@media (max-width: 768px) {
-  .detail-item {
-    padding: 5px;
-    min-width: 60px;
-  }
-  
-  .detail-item p {
-    font-size: 0.8rem;
-  }
-  
-  .detail-icon {
-    font-size: 1.2rem;
-  }
-}
-</style>

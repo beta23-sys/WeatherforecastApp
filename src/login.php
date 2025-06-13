@@ -1,32 +1,37 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-include 'db.php';
+require_once __DIR__ . '/db.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
-$email = trim($data['email'] ?? '');
-$password = $data['password'] ?? '';
+$raw  = file_get_contents('php://input');
+$data = json_decode($raw, true);
 
+$email    = isset($data['email'])    ? trim($data['email'])    : '';
+$password = isset($data['password']) ? $data['password']       : '';
+
+// basic check
 if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
-    echo json_encode(['success'=>false, 'message'=>'Missing credentials']);
+    echo json_encode(['success'=>false,'message'=>'Missing credentials']);
     exit;
 }
 
-// Lookup user by email
-$stmt = $conn->prepare("SELECT id, password_hash FROM users WHERE email = ?");
+// fetch stored password
+$stmt = $conn->prepare("SELECT id, password FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
+
 if ($row = $result->fetch_assoc()) {
-    // Verify password
-    if (password_verify($password, $row['password_hash'])) {
-        // Login success: set session
-        $_SESSION['user_id'] = $row['id'];
+    if ($password === $row['password']) {
         $_SESSION['user_email'] = $email;
-        echo json_encode(['success'=>true, 'user_email'=>$email]);
+        echo json_encode(['success'=>true,'user_email'=>$email]);
     } else {
-        echo json_encode(['success'=>false, 'message'=>'Incorrect password']);
+        echo json_encode(['success'=>false,'message'=>'Incorrect password']);
     }
 } else {
-    echo json_encode(['success'=>false, 'message'=>'Email not found']);
+    echo json_encode(['success'=>false,'message'=>'Email not found']);
 }
+
+$stmt->close();
+$conn->close();
+?>
